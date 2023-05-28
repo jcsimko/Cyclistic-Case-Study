@@ -1,0 +1,1365 @@
+---
+title: "Cyclistic Case Study"
+author: "John Simko"
+date: "2023-05-24"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Overview
+
+### About This Project
+This is a capstone project as a part of the Google Data Analytics Professional Certificate course. I am analyzing the usage patterns of Cyclistic, a fictitious bike-sharing company in Chicago, to identify differences between casual riders and annual members. My goal is to help the marketing team devise strategies to convert casual riders into annual members, ultimately driving company growth. I will follow a structured approach using Google's data analysis process: **Ask**, **Prepare**, **Process**, **Analyze**, **Share**, and **Act**. By examining historical trip data over the past 12 months, I aim to answer key business questions, uncover trends, and provide actionable insights backed by compelling data visualizations. The resulting analysis and recommendations will be presented to the executive team to inform marketing strategies aimed at increasing the number of annual members.
+
+### About Cyclistic
+In 2016, Cyclistic launched a successful bike-share offering. Since then, the program has grown to a fleet of 5,824 bicycles that are geotracked and locked into a network of 692 stations across Chicago. The bikes can be unlocked from one station and returned to any other station in the system anytime.
+
+Customers who purchase single-ride or full-day passes are referred to as casual riders. Customers who purchase annual memberships are Cyclistic members. Cyclistic's finance analysts have concluded that annual members are much more profitable than casual riders. Although the pricing flexibility helps Cyclistic attract more customers, Lily Moreno, the Director of Marketing, believes that maximizing the number of annual members will be key to future growth.
+
+## 1. Ask
+
+### 1.1 Business Task
+Analyze the usage patterns of casual riders and annual members to help the marketing team devise strategies to convert casual riders into annual members, ultimately driving company growth.
+
+### 1.2 Key Stakeholders
+**Lily Moreno**: Director of Marketing. She is responsible for the development of campaigns and initiatives to promote the bike-share program. These may include email, social media, and other channels.  
+**Marketing Team**: A team of data analysts who are responsible for collecting, analyzing, and reporting data that helps guide Cyclistic marketing strategy.  
+**Executive Team**: Executive team that will decide whether to approve the recommended marketing program.  
+
+### 1.3 Key Business Questions
+1. How do annual members and casual riders use Cyclistic bikes differently?
+2. Why would casual riders buy Cyclistic annual memberships?
+3. How can Cyclistic use digital media to influence casual riders to become members? 
+
+## 2. Prepare
+
+I am using Cyclistic's historical trip data to analyze and identify trends from [here](https://divvy-tripdata.s3.amazonaws.com/index.html). The data has been made available by Motivate International Inc. under this [license] (https://ride.divvybikes.com/data-license-agreement). There are separate csv files for each month of data. I have downloaded the previous 12 months (**May 2022** through **April 2023**) of bike data.
+I referenced the divvybikes.com website to help answer questions regarding the different bike types and their current pricing model.
+
+## 3. Process
+
+### 3.1 Tools
+
+The tools used for this project are **RStudio** (RStudio 2023.03.1 Build 446) running **R** (version 4.3.0) and **Microsoft Excel** (Office 365 version) running under Windows 11 (Home) operating system.
+
+### 3.2 Load Packages
+
+```{r load libraries, message=FALSE, warning=FALSE, results='hide'}
+#Code chunk 3.2.1: load libraries
+
+options(repos = c(CRAN = "https://cran.r-project.org"))
+install.packages("tidyverse")
+library(tidyverse)
+library(lubridate)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(readr)
+install.packages("janitor")
+library(janitor)
+install.packages("ggmap")
+library(ggmap)
+install.packages("geosphere")
+library(geosphere)
+install.packages("modeest")
+library(modeest)
+install.packages("ggstatsplot")
+library(ggstatsplot)
+if (!require("tinytex")) {
+  install.packages("tinytex", repos = "https://cran.r-project.org")
+}
+
+if (!tinytex:::is_tinytex()) {
+  tinytex::install_tinytex()
+}
+library(tinytex)
+
+```
+
+### 3.3 Load Data
+
+- Use the "**read_csv()**" function to import data from each .csv file and store in data frames. Each data frame was given  name  corresponding to the data stored in each file. For example, the data collected from **202205** will be stored in a data frame named "**MAY22**." 
+
+```{r load past 12 months of data, message=FALSE, warning=FALSE}
+#Code chunk 3.3.1: Load past 12 months of data
+
+MAY22 <- read.csv("C:/Users/jcsim/OneDrive/Documents/Learning/Posit/Cyclistic/Data/202205-divvy-tripdata.csv")
+JUN22 <- read.csv("C:/Users/jcsim/OneDrive/Documents/Learning/Posit/Cyclistic/Data/202206-divvy-tripdata.csv")
+JUL22 <- read.csv("C:/Users/jcsim/OneDrive/Documents/Learning/Posit/Cyclistic/Data/202207-divvy-tripdata.csv")
+AUG22 <- read.csv("C:/Users/jcsim/OneDrive/Documents/Learning/Posit/Cyclistic/Data/202208-divvy-tripdata.csv")
+SEP22 <- read.csv("C:/Users/jcsim/OneDrive/Documents/Learning/Posit/Cyclistic/Data/202209-divvy-publictripdata.csv")
+OCT22 <- read.csv("C:/Users/jcsim/OneDrive/Documents/Learning/Posit/Cyclistic/Data/202210-divvy-tripdata.csv")
+NOV22 <- read.csv("C:/Users/jcsim/OneDrive/Documents/Learning/Posit/Cyclistic/Data/202211-divvy-tripdata.csv")
+DEC22 <- read.csv("C:/Users/jcsim/OneDrive/Documents/Learning/Posit/Cyclistic/Data/202212-divvy-tripdata.csv")
+JAN23 <- read.csv("C:/Users/jcsim/OneDrive/Documents/Learning/Posit/Cyclistic/Data/202301-divvy-tripdata.csv")
+FEB23 <- read.csv("C:/Users/jcsim/OneDrive/Documents/Learning/Posit/Cyclistic/Data/202302-divvy-tripdata.csv")
+MAR23 <- read.csv("C:/Users/jcsim/OneDrive/Documents/Learning/Posit/Cyclistic/Data/202303-divvy-tripdata.csv")
+APR23 <- read.csv("C:/Users/jcsim/OneDrive/Documents/Learning/Posit/Cyclistic/Data/202304-divvy-tripdata.csv")
+
+```
+
+### 3.4 Data Integrity Checks
+
+#### 3.4.1 Glimpse  
+
+- Use "**glimpse()**" to get an overview of each data object, including the number of rows and columns, and data type of each column. 
+
+```{r Use glimpse() to check each data frame\'s integrity, message=FALSE, warning=FALSE, results='hide'}
+#Code chunk 3.4.1.1: Run glimpse()
+
+glimpse(MAY22)
+glimpse(JUN22)
+glimpse(JUL22)
+glimpse(AUG22)
+glimpse(SEP22)
+glimpse(OCT22)
+glimpse(NOV22)
+glimpse(DEC22)
+glimpse(JAN23)
+glimpse(FEB23)
+glimpse(MAR23)
+glimpse(APR23)
+
+```
+
+* Manually verified each data frame had the same number of columns and data types.
+
+#### 3.4.2 Column Names  
+
+- Use "**colnames()**" to check the for column name inconsistencies. 
+
+```{r Use colnames() to check the for column name inconsistencies, message=FALSE, warning=FALSE, results='hide'}
+#Code chunk 3.4.2.1: Run colnames()
+
+colnames(MAY22)
+colnames(JUN22)
+colnames(JUL22)
+colnames(AUG22)
+colnames(SEP22)
+colnames(OCT22)
+colnames(NOV22)
+colnames(DEC22)
+colnames(JAN23)
+colnames(FEB23)
+colnames(MAR23)
+colnames(APR23)
+
+```
+
+* Verified columns names matched.
+
+#### 3.4.3 Comparing Data Types in Each Column of Every Data Frame  
+
+- To make sure that the data type in each column in every data frame is consistent, I performed a data type check using  "**sapply()**" to apply "**typeof()**" across every column in a data frame. The information about the data type of each column was extracted and stored in a separate object named according to its original data frame. For example, data type object extracted from **MAY22** was named **dtMAY22**.  
+
+- Each data type object extracted from each data frame was then compared by using "**identical()**". All 12 data type objects were compared to **MAY22**  
+
+```{r Compare data types across data frames, message=FALSE, warning=FALSE, results='hide'}
+#Code chunk 3.4.3.1: Data type comparison
+
+dtMAY22 <- sapply(MAY22,typeof)
+dtJUN22 <- sapply(JUN22,typeof)
+dtJUL22 <- sapply(JUL22,typeof)
+dtAUG22 <- sapply(AUG22,typeof)
+dtSEP22 <- sapply(SEP22,typeof)
+dtOCT22 <- sapply(OCT22,typeof)
+dtNOV22 <- sapply(NOV22,typeof)
+dtDEC22 <- sapply(DEC22,typeof)
+dtJAN23 <- sapply(JAN23,typeof)
+dtFEB23 <- sapply(FEB23,typeof)
+dtMAR23 <- sapply(MAR23,typeof)
+dtAPR23 <- sapply(APR23,typeof)
+
+identical(dtJUN22,dtMAY22)
+identical(dtJUL22,dtMAY22)
+identical(dtAUG22,dtMAY22)
+identical(dtSEP22,dtMAY22)
+identical(dtOCT22,dtMAY22)
+identical(dtNOV22,dtMAY22)
+identical(dtDEC22,dtMAY22)
+identical(dtJAN23,dtMAY22)
+identical(dtFEB23,dtMAY22)
+identical(dtMAR23,dtMAY22)
+identical(dtAPR23,dtMAY22)
+
+```
+
+* Returned TRUE for all comparisons.  
+
+#### 3.5 Combine Data Frames  
+
+- Combine 12 data frames together into a single data frame named "**merged_data**":  
+
+```{r Combine data frames into one data frame for analysis, message=FALSE, warning=FALSE}
+#Code chunk 3.4.1: Combine data frames
+
+merged_data <- rbind(MAY22, JUN22, JUL22, AUG22, SEP22, OCT22, NOV22, DEC22, JAN23, FEB23, MAR23, APR23)
+
+```
+
+#### 3.6 Verify and Clean Data
+
+#### 3.6.1 Run clean_names()   
+
+- Run 'clean_names()' from the `janitor` package.
+
+```{r Run `clean_names()`, message=FALSE, warning=FALSE}
+#Code chunk 3.5.1: Run `clean_names()`
+
+merged_data <- clean_names(merged_data)
+```
+
+* No changes.
+
+#### 3.6.2 Validate ride_id Column  
+
+- Confirm that there are no duplicated instances of `ride_id`. Expected result is (*"A tibble: 0 x 2"*).
+
+```{r Check for duplicated ride_id values, message=FALSE, warning=FALSE}
+#Code chunk 3.6.2.1 Check for duplicate ride_ids
+
+merged_data %>% count(ride_id) %>% filter(n>1)
+
+```
+
+* Test passed. There are no duplicate `ride_id` values.
+
+Confirm ride_ids are the same length by grouping by ride_id string length and filtering out the groups with no results.
+
+```{r Check ride id lengths, message=FALSE, warning=FALSE}
+#Code chunk 3.6.2.2 Confirm ride_ids are the same length
+
+ride_id_lengths_df <- merged_data %>%
+  mutate(ride_id_lengths = nchar(ride_id)) %>%
+  group_by(ride_id_lengths) %>%
+  summarise(count = n(), .groups = "drop")
+
+ride_id_lengths_df
+
+```
+
+* All ride_ids are the same length.
+
+#### 3.6.3 Check Data Consistency  
+
+- Check that values in the **member_casual** and **rideable_type** have the same name/spelling convention. For the `member_casual` column, we should only see two different attributes: casual and member. For the `rideable_type` column, there should only be 3 bike options: classic_bike, docked_bike, electric_bike.
+
+```{r Check data consistency for member_casual and rideable_type columns, message=FALSE, warning=FALSE}
+#Code chunk 3.6.3.1: Check data consistency
+
+merged_data %>% distinct(member_casual)
+merged_data %>% distinct(rideable_type)
+```
+
+* Returned expected results.
+
+#### 3.6.4 Check for NAs and Empty Strings  
+
+- Create and call a function to check for NAs and empty strings. As part of this process I am creating a new **merged_data_2** data frame.
+
+```{r count nulls function, message=FALSE, warning=FALSE, cache = FALSE}
+#Code chunk 3.6.4.1: Function to check for nulls and empty strings
+
+count_nulls_and_empty <- function(df) {
+  result <- data.frame(Column = character(), Nulls = integer(), EmptyStrings = integer(), stringsAsFactors = FALSE)
+  
+  for(col_name in names(df)) {
+    column <- df[[col_name]]
+    null_count <- sum(is.na(column))
+    
+    if (is.character(column)) {
+      empty_string_count <- sum(column == "")
+    } else {
+      empty_string_count <- NA
+    }
+    
+    result <- rbind(result, data.frame(Column = col_name, Nulls = null_count, EmptyStrings = empty_string_count, stringsAsFactors = FALSE))
+  }
+  
+  return(result)
+}
+
+result <- count_nulls_and_empty(merged_data)
+result
+
+```
+
+Replace empty string values with "NA" in a character columns (i.e., string). Also, create new data frame **merged_data_2**
+
+```{r Replace empty string values with "NA" in a character columns, message=FALSE, warning=FALSE}
+#Code chunk 3.6.4.2: Replace empty strings with "NA"
+
+merged_data_2 <- data.frame(lapply(merged_data, function(column) {
+  if(is.character(column)) {
+    column[column == ""] <- NA
+  }
+  return(column)
+}))
+
+```
+
+Re-run count_nulls_and_empty() function against merged_data_2
+
+```{r call count nulls function, depends = "count nulls function"}
+#Code chunk 3.6.4.3: Re-run count_nulls_and_empty() function
+
+result <- count_nulls_and_empty(merged_data_2)
+result
+
+```
+
+* Empty strings have been replaced by NA.
+
+**Note**: There is a high percentage of NA values in in start and end station name/id and end lat and long fields. For example, **14%** of start_station_name values are NA. I would want to discuss this with the Marketing Team. It's not clear if there are technical issues with capturing that information or if it has to do with people not starting and ending their rides at designated stations. There are also null values in the end lat and long columns that I analyzed, but didn't take any action.
+
+#### 3.6.5 Validate station_ids and station_names  
+
+```{r Check the count of distinct station_ids and station_names} 
+#Code chunk 3.6.5.1 Count distinct station_ids and station_names
+
+n_distinct(merged_data_2$start_station_id)
+n_distinct(merged_data_2$start_station_name)
+n_distinct(merged_data_2$end_station_id)
+n_distinct(merged_data_2$end_station_name)
+
+```
+
+* **Note:** Given how the Case Study states that there are 692 stations, it could be that there is bad station information or people are starting and ending their rides at non-designated stations.
+
+Create a function to check for numeric, non-numeric and na values 
+
+```{r count_value_types_function_defition, and na values, message=FALSE, warning=FALSE, cache = FALSE}
+#Code chunk 3.6.5.2 Check for numeric, non-numeric, and NA values
+
+count_value_types <- function(df, column_name) {
+  # Use grepl() to check if each value in the column is a number
+  # and sum up the TRUE values
+  num_values <- sum(grepl("\\d", df[[column_name]]))
+
+  # Compute the number of NA rows
+  na_values = sum(is.na(df[[column_name]]))
+
+  # Compute the number of non-numeric values by subtracting
+  # the number of numeric values from the total number of values
+  char_values <- nrow(df) - na_values - num_values
+
+  print(paste("Number of", column_name, "numeric values: ", num_values))
+  print(paste("Number of", column_name, "na values: ", na_values))
+  print(paste("Number of", column_name, "character values: ", char_values))
+}
+
+count_value_types(merged_data_2, "start_station_id")
+count_value_types(merged_data_2, "end_station_id")
+
+```
+
+* There is inconsistency in both start and end station id naming convention. Some are all numbers and some are character based.
+
+Create a function to look at column string length and look at the different start_station_id col_lengths.
+
+```{r analyze_col_lengths_function_definition}
+#Code chunk 3.6.5.3 Analyze column string length function
+
+analyze_col_lengths <- function(df, column_name) {
+  col_length_results <- df %>%
+    mutate(col_lengths = nchar(df[[column_name]])) %>%
+    group_by(col_lengths) %>%
+    summarise(count = n(), .groups = "drop")
+  
+  print(col_length_results)
+}
+
+analyze_col_lengths(merged_data_2, "start_station_id")
+```
+
+* **Note** There is no consistency with start_station_id value lengths. 
+
+I then looked at the records for each col_length to determine if there was anything insightful about them.
+
+Create function that filters rows where a specified column has a certain number of characters. 
+
+```{r filters rows where a specified column has a certain number of characters, results='hide'}
+#Code chunk 3.6.5.4  Filter Rows on Char Count Function
+
+filter_by_char_count <- function(df, column_name, char_count) {
+  filtered_df <- df %>%
+    filter(nchar(df[[column_name]]) == char_count)
+  
+  print(filtered_df)
+}
+
+filter_by_char_count(merged_data_2, "start_station_id", 31)
+
+```
+
+* Based on this analysis, I would prefer to ask the Marketing group about the stations with the following start_station_id lengths: 31, 34, 35, 36. However, given that I am not able to, I decided to filter out those rows because they do not appear to be stations that customers would use. 
+
+|------------------------------------------------|
+|col_length  start_station_id                    |
+|------------------------------------------------|
+|31         2059 Hastings Warehouse Station      |   
+|34         DIVVY 001 - Warehouse test station   |
+|35         Hubbard Bike-checking (LBS-WH-TEST)  |
+|36         DIVVY CASSETTE REPAIR MOBILE STATION |
+|------------------------------------------------|
+
+Create function to remove rows that match set of values from a column.
+
+```{r remove_rows_function_definition}
+
+#Code Chunk 3.6.5.5: Remove Rows Function
+
+remove_rows <- function(df, column_name, values_to_remove) {
+  df %>%
+    filter(! (get(column_name) %in% values_to_remove))
+}
+
+# Call remove_rows function
+
+values_to_remove <- c('2059 Hastings Warehouse Station', 'DIVVY 001 - Warehouse test station', 'Hubbard Bike-checking (LBS-WH-TEST)', 'DIVVY CASSETTE REPAIR MOBILE STATION')
+merged_data_2 <- remove_rows(merged_data_2, 'start_station_id', values_to_remove)
+merged_data_2 <- remove_rows(merged_data_2, 'end_station_id', values_to_remove)
+
+```
+
+Rerun analyze_col_lengths for both start_station_id and end_station_id.
+
+```{r run analyze_col_lengths, depends = "analyze_col_lengths_function_definition"}
+#Code Chunk 3.6.5.6: Run analyze_col_lengths
+
+analyze_col_lengths(merged_data_2, "start_station_id")
+analyze_col_lengths(merged_data_2, "end_station_id")
+```
+
+* **Note:** There still are 10 different start and end station_id col lengths and types. I am not going to change them.
+
+##### 3.6.6 Change rideable_type and member_casual Data Types to Factor  
+
+- Convert rideable_type and member_casual columns which contain categorical values into "**factor**" type to reduce data redundancy and save memory space.
+
+```{r Convert data type ot "factor", message=FALSE, warning=FALSE, results='hide'}
+#Code chunk 3.6.6.1: Convert data type to 'factor'
+
+merged_data_2 <- merged_data_2 %>%
+     mutate(rideable_type=as.factor(rideable_type)) %>%
+     mutate(member_casual=as.factor(member_casual))
+```
+
+##### 3.6.7 Fix started_at > ended_at 
+
+- Check for instances where started_at > ended_at.
+
+```{r Check started_at > ended_at, message=FALSE, warning=FALSE, results='hide'}
+#Code chunk 3.6.7.1: Check started_at > ended_at
+
+merged_data_2 %>% filter(started_at > ended_at)
+
+```
+
+* There are 102 instances. 
+
+Check if **started_at** is greater than **ended_at** in the same row and swap them:
+
+```{r check if started_at > ended_at and swap them, message=FALSE, warning=FALSE}
+#Code chunk 3.6.7.2: Check if started_at > #ended_at and swap them
+
+for (i in 1:nrow(merged_data_2)) {
+  if(merged_data_2[i,3] > merged_data_2[i,4]) {
+    c <- merged_data_2[i,3]
+    merged_data_2[i,3] <- merged_data_2[i,4]
+    merged_data_2[i,4] <- c
+  }
+}
+```
+
+Re-run started_at > ended_at filter
+
+```{r started_at > ended_at filter, message=FALSE, warning=FALSE}
+#Code chunk 3.6.7.3: started_at > ended_at filter filter
+
+merged_data_2 %>% filter(started_at > ended_at)
+
+```
+
+* It came back with zero result.  
+
+#### 3.6.8 Convert started_at and ended_at to date-time and create new columns  
+
+```{r Convert started_at and ended_at to date-time and create new merged_data_2 columns, message=FALSE, warning=FALSE}
+#Code chunk 3.6.8.1 Convert columns and create new columns
+
+merged_data_2 <- merged_data_2 %>% 
+  mutate(
+    start_time = ymd_hms(started_at),
+    end_time = ymd_hms(ended_at),
+    start_hour = hour(start_time),
+    end_hour = hour(end_time),
+    start_dow = wday(start_time, label = TRUE),
+    end_dow = wday(end_time, label = TRUE),
+    ride_duration = as.numeric(difftime(end_time, start_time, units = "mins"))
+  )    
+
+# Format start_month and end_month
+merged_data_2 <- merged_data_2 %>%
+  mutate(start_month = floor_date(start_time, "month"),
+         end_month = floor_date(end_time, "month"))
+
+# Sort start_month chronologically
+merged_data_2 <- merged_data_2 %>%
+  arrange(start_month)
+
+# After sorting, format start_month and end_month to "yymmm" for display
+merged_data_2 <- merged_data_2 %>%
+  mutate(start_month = format(start_time, "%y%b"),
+         end_month = format(end_time, "%y%b"))
+
+# Convert start_month and end_month to a factor and specify the levels in correct order
+merged_data_2 <- merged_data_2 %>%
+  mutate(start_month = factor(start_month, levels = unique(start_month)),
+         end_month = factor(end_month, levels = unique(end_month)))
+
+# Review new data frame structure
+str(merged_data_2)
+
+```
+
+I applied the same changes to merged_data also in case I want to run similar queries.
+
+```{r Convert started_at and ended_at to date-time and create new columns for merged_data, message=FALSE, warning=FALSE}
+#Code chunk 3.6.8.2 Convert columns and create new columns
+
+merged_data <- merged_data %>% 
+  mutate(
+    start_time = ymd_hms(started_at),
+    end_time = ymd_hms(ended_at),
+    start_hour = hour(start_time),
+    end_hour = hour(end_time),
+    start_dow = wday(start_time, label = TRUE),
+    end_dow = wday(end_time, label = TRUE),
+    ride_duration = as.numeric(difftime(end_time, start_time, units = "mins"))
+  )
+
+# Format start_month and end_month
+merged_data <- merged_data %>%
+  mutate(start_month = floor_date(start_time, "month"),
+         end_month = floor_date(end_time, "month"))
+
+# Now start_month is in a Date format and can be sorted chronologically
+merged_data <- merged_data %>%
+  arrange(start_month)
+
+# After sorting, format start_month to "yymmm" for display
+merged_data <- merged_data %>%
+  mutate(start_month = format(start_time, "%y%b"),
+         end_month = format(end_time, "%y%b"))
+
+# Convert start_month and end_month to a factor and specify the levels in correct order
+merged_data <- merged_data %>%
+  mutate(start_month = factor(start_month, levels = unique(start_month)),
+         end_month = factor(end_month, levels = unique(end_month)))
+
+```
+
+#### 3.6.9 Inspect started_at and ended_at
+
+- Verify that there are no records with started_at < "2022-04-01" | started_at  > "2023-05-01"
+
+```{r Inspect started_at and ended_at, results='hide'}
+#Code chunk 3.6.9.1 Check started_at < "2022-04-01" | started_at  > "2023-05-01"
+
+filter(merged_data_2, started_at < "2022-04-01" | started_at  > "2023-05-01")
+filter(merged_data_2, ended_at > "2023-05-01")
+
+```
+
+* No started_at < "2022-04-01" or started_at  > "2023-05-01" records
+There were rows returned for ended_at > "2023-05-01", which means that each monthly file contains bike data for bikes returned the month after.
+
+#### 3.6.10 Inspect ride_duration
+
+- Look at statistics of the ride duration:
+
+```{r Check the statistics of the ride duration, message=FALSE, warning=FALSE}
+#Code chunk 3.6.10.1: Check the stats of the column ride_duration
+
+summary(merged_data_2$ride_duration)
+
+```
+    
+* The statistics indicate extremely high values in the dataset (i.e., the max value is much higher than the third quartile). This is causing the mean to be much higher than the median. This indicates a positive (right) skew, meaning there are a small number of very large values (i.e., outliers). 
+
+Because outliers could be different for casual and member riders, I separated them into different data sets.
+
+```{r Splitting data into casualdata and memberdata, message=FALSE, warning=FALSE}
+
+#Code chunk 3.6.10.2: Splitting data into "casualdata" and "memberdata" data sets:
+casualdata <- merged_data_2 %>%
+  filter(member_casual=="casual")
+
+memberdata <- merged_data_2 %>%
+  filter(member_casual=="member")
+```
+
+- I then identify outliers according to its interquantile range (IQR) and create new data sets to store the results. I credit https://github.com/pkx8326 for including the following logic to  spot and remove outliers. He referenced [interquartile range](https://www.r-bloggers.com/2020/01/how-to-remove-outliers-in-r/) This technique finds the interquartile range of a list of numbers, the width of the range, and defines boundary outside of which lie removable outliers.
+
+\
+*__Formula setting the inter quantile boundary to remove outliers__*
+$$[Q1-1.5IQR,Q3+1.5IQR]$$
+**Where**:\
+Q1 is the 1^st^ quartile value\
+Q3 is the 3^rd^ quartile value\
+IQR is th width of the interquantile range\
+\
+
+```{r Identify and remove the outliers from the data ,message=FALSE, warning=FALSE, results='hide'}
+#Code chunk 3.6.10.3 Identify and remove outliers from the data
+
+#find the quantile range for "casualdata":
+Q_casual <- quantile(casualdata$ride_duration,probs=c(.25,.75),na.rm=F)
+#find the IQR of "casualdata"
+iqr_casual <- IQR(casualdata$ride_duration)
+#find the upper cut-off value:
+casual_up <- Q_casual[2]+1.5*iqr_casual
+#find the lower cut-off value:
+casual_low <- Q_casual[1]-1.5*iqr_casual
+#removing the outliers from "casualdata":
+casualdata_adj <- casualdata %>%
+  mutate(ride_duration=ifelse(ride_duration>casual_up,NA,
+                                  ride_duration)) %>%
+  mutate(ride_duration=ifelse(ride_duration<casual_low,NA,
+                                  ride_duration))
+
+#find the quantile range for "memberdata":
+Q_member <- quantile(memberdata$ride_duration,probs=c(.25,.75),na.rm=F)
+#find the IQR of "memberdata"
+iqr_member <- IQR(memberdata$ride_duration)
+#find the upper cut-off value:
+member_up <- Q_member[2]+1.5*iqr_member
+#find the lower cut-off value:
+member_low <- Q_member[1]-1.5*iqr_member
+#removing the outliers from "memberdata":
+memberdata_adj <- memberdata %>%
+  mutate(ride_duration=ifelse(ride_duration>member_up,NA,
+                                  ride_duration)) %>%
+  mutate(ride_duration=ifelse(ride_duration<member_low,NA,
+                                  ride_duration))
+
+#merging the outlier-free data sets into a new merged_data_3 data set:
+merged_data_3 <- bind_rows(casualdata_adj,memberdata_adj)
+
+#Sorting the data by time back to its original order
+#This will affect the map plot
+merged_data_3 <- merged_data_3 %>% 
+  arrange(desc(started_at))
+```
+
+In addition, I do not believe that ride_duration < 1 minute should be included for this analysis, so I am removing the records.
+
+```{r Filter rider_duration < 1, results='hide'}
+# Code chunk 3.6.10.4 Remove rides with ride_duration < 1
+
+filter(merged_data_3, ride_duration < 1)
+
+```
+
+* There are 140,291 records with ride_duration < 1 minute
+
+```{r emove rides with ride_duration < 1, results='hide'}
+# Code chunk 3.6.10.5 Remove rides with ride_duration < 1
+
+merged_data_3 <- merged_data_3 %>%
+  filter(!(ride_duration < 1))
+casualdata_adj <- casualdata_adj %>%
+  filter(!(ride_duration < 1))
+memberdata_adj <- memberdata_adj %>%
+  filter(!(ride_duration < 1))
+
+```
+
+## 4. Analyze
+
+### 4.1 Analyze Ride Duration
+
+```{r Check the statistics of the casual and member ride duration, message=FALSE, warning=FALSE}
+#Code chunk 4.1.1: Check the ride duration stats of member and casual riders.
+
+summary(casualdata$ride_duration)
+summary(memberdata$ride_duration)
+
+```
+
+```{r Ride Duration box plot, message=FALSE, warning=FALSE}
+#Code chunk 4.1.2 Ride Duration Box Plot using pre-adjusted merged_data_2 data set
+
+ggplot(data=merged_data_2)+
+  geom_boxplot(mapping=aes(x=member_casual,y=ride_duration))+
+  ggtitle("Bike Trip Duration (mins)",
+          subtitle="No Ride Duration Records Removed")+
+  scale_x_discrete(name=element_blank(),
+                   labels=c("casual","member"))+
+  ylab("Ride Duration (mins)")+
+  annotate("text",label="0.00",x=1.1,y=2000)+
+  annotate("text",label="41,387.00",x=1.2,y=41400)+
+  annotate("segment",x=1.05,xend=1,y=41400,yend=41400)+
+  annotate("text",label="0.00",x=2.1,y=2000)+
+  annotate("text",label="10,353.00",x=2.2,y=10400)+
+  annotate("segment",x=2.05,xend=2,y=10400,yend=10400)
+
+```
+
+* The outliers cause the two boxes to show as flat lines on the x-axis. 
+
+I am now going to look at ride duration statistics for casualdata_adj and memberdata_adj with outliers and ride_duration < 1 removed.
+
+```{r Ride_duration stats of adjusted member and casual riders, message=FALSE, warning=FALSE}
+#Code chunk 4.1.3: Check the ride_duration stats of adjusted member and casual riders
+
+print("casualdata ride duration")
+summary(casualdata_adj$ride_duration)
+print("memberdata ride duration")
+summary(memberdata_adj$ride_duration)
+
+```
+
+Create Box Plot of Ride Duration using merged_data_3 (outliers removed).
+
+```{r Ride Duration Box plot using merged_data_3 (outliers removed), message=FALSE, warning=FALSE}
+#Code chunk 4.1.4: Ride Duration Box plot using merged_data_3 (outliers removed).
+
+ggplot(data=merged_data_3)+
+  geom_boxplot(mapping=aes(x=member_casual,y=ride_duration))+
+  ggtitle("Bike Trip Duration (mins)",
+          subtitle="Outlier Ride Duration Records Removed")+
+  scale_x_discrete(name=element_blank(),
+                   labels=c("casual","member"))+
+  ylab("Ride Duration (mins)")+
+  annotate("text",label="1.00",x=1.15,y=2)+
+  annotate("text",label="6.95",x=1.15,y=9)+
+  annotate("text",label="11.65",x=1.15,y=13.6)+
+  annotate("text",label="19.65",x=1.15,y=21.65)+
+  annotate("text",label="47.63",x=1.15,y=48)+
+  annotate("segment",x=1.05,xend=1,y=1,yend=1)+
+  annotate("segment",x=1.05,xend=1,y=47.63,yend=47.63)+
+  annotate("text",label="1.00",x=2.15,y=2)+
+  annotate("text",label="5.01",x=2.15,y=7)+
+  annotate("text",label="8.34",x=2.15,y=10.5)+
+  annotate("text",label="13.6",x=2.15,y=15.6)+
+  annotate("text",label="29.95",x=2.15,y=30)+
+  annotate("segment",x=2.05,xend=2,y=1,yend=1)+
+  annotate("segment",x=2.05,xend=2,y=29.95,yend=29.95)
+
+```
+
+* The new box plot shows that **casual** riders spend more time on their bikes than the **member** riders on average. 
+
+* Outliers are still present, but shouldn't have as much of an impact on the analysis.
+
+### 4.2 Analyze Total Rides and Duration
+
+```{r}
+#Code chunk 4.2.1 Analyze total rides and duration
+
+ride_summary <- merged_data_3 %>%
+  group_by(member_casual) %>%
+  summarize(total_rides = n(), 
+            percentage_rides = round((n() / nrow(merged_data_3)) * 100),
+            total_duration = sum(ride_duration),
+            avg_ride_duration = mean(ride_duration))
+
+ride_summary
+
+```
+
+```{r}
+
+# Code chunk 4.2.2 Bar Chart of Number of Rides by Rider Type
+
+ggplot(ride_summary, aes(x = member_casual, y = total_rides, fill = member_casual)) +
+  geom_col() +
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "Number of Rides by Rider Type",
+       x = "Rider Type",
+       y = "Number of Rides",
+       fill = "Rider Type") +
+  annotate("text",label="2,098,900",x=1,y=1900000)+
+  annotate("text",label="3,198,857",x=2,y=3000000)
+
+```
+
+* Members take more rides (3,198,857) than Casual riders (2,098,900).
+
+```{r}
+# 4.2.3 Pie Chart of Percentage of Rides by Rider Type
+
+pie = ggplot(ride_summary, aes(x="", y=percentage_rides, fill=member_casual)) + geom_bar(stat="identity", width=1)
+ 
+# Converting to pie (polar coordinates) and add labels
+pie = pie + coord_polar("y", start=0)
+ 
+# Removing labels and add title
+pie = pie + labs(x = NULL, y = NULL, fill = "Rider Type", title = "Percentage of Rides by Rider Type")
+
+# Tidying up the theme
+pie = pie + theme_classic() + theme(axis.line = element_blank(),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(),
+          plot.title = element_text(hjust = 0.5)) +
+          geom_text(aes(label = scales::percent(percentage_rides / 100)), 
+            position = position_stack(vjust = 0.5))
+
+pie
+
+```
+
+* Members account for 60% of the rides and Casual riders account for 40%.
+
+```{r}
+# 4.2.4 Bar Chart of Ride Duration by Rider Type
+
+ggplot(ride_summary, aes(x = member_casual, y = avg_ride_duration, fill = member_casual)) +
+  geom_col() +
+  labs(title = "Average Ride Duration by Rider Type",
+       x = "Rider Type",
+       y = "Average Ride Duration (mins)",
+       fill = "Rider Type") +
+  annotate("text",label="14.57",x=1,y=13.5)+
+  annotate("text",label="10.07",x=2,y=9)
+
+```
+
+* Casual riders ride on average for a longer duration compared to the Members (~15min vs 10min).
+
+### 4.3 Analyze Total Tides and Tide Duration by Month
+
+```{r  Analyze total rides and duration by month, results='hide'}
+#Code chunk 4.3.1 Analyze total rides and duration by month
+
+ride_month_summary <- merged_data_3 %>%
+  group_by(member_casual, start_month) %>%
+  summarize(total_rides = n(),
+            avg_ride_duration = mean(ride_duration), .groups = 'drop') %>%
+  ungroup()
+
+ride_month_summary
+
+```
+
+* Both types of riders took most rides between May-October and the least rides between December-February.
+* Average Ride Duration was between 8.6 - 11.1 minutes for Members and between 10.3 - 30.4 minutes for Casual riders.
+
+```{r}
+# Code chunk 4.3.2 Bar Chart of total rides by month
+
+ggplot(ride_month_summary, aes(x = start_month, y = total_rides, fill = member_casual)) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(labels = scales::comma) +
+  labs(x = "Month", y = "Number of Rides", title = "Number of Rides by Rider Type by Month", fill = "Rider Type") 
+
+```
+
+```{r}
+
+# Code chunk 4.3.3 Bar Chart of ride duration by month
+
+ggplot(ride_month_summary, aes(x = start_month, y = avg_ride_duration, fill = member_casual)) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(labels = scales::comma) +
+  labs(x = "Month", 
+       y = "Average Ride Duration (Minutes)", 
+       title = "Average Ride Duration by User Type by Month",
+       fill = "Rider Type")
+```
+
+### 4.4 Analyze Total rides and Ride Duration by Day of Week
+
+```{r}
+# Code chunk 4.4.1 Analyze total rides and duration by day of week
+
+ride_day_summary <- merged_data_3 %>%
+  group_by(member_casual, start_dow) %>%
+  summarize(total_rides = n(),
+            avg_ride_duration = mean(ride_duration), .groups = 'drop') %>%
+  ungroup()
+
+ride_day_summary
+
+```
+
+```{r}
+
+# Code chunk 4.4.2 Bar Chart of total rides by day of week
+
+ggplot(ride_day_summary, aes(x = start_dow, y = total_rides, fill = member_casual)) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(labels = scales::comma) +
+  labs(x = "Day", 
+       y = "Number of Rides", 
+       title = "Number of Rides by Rider Type by Day of Week",
+       fill = "Rider Type")
+
+```
+
+* Casual riders took the most rides during the weekend.
+* Members took the most rides during the week.
+
+```{r Create Bar Chart of Ride Duration by day of week}
+
+# Code chunk 4.4.3 Bar Chart of Ride Duration by day of week
+
+ggplot(ride_day_summary, aes(x = start_dow, y = avg_ride_duration, fill = member_casual)) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(labels = scales::comma) +
+  labs(x = "Day", 
+       y = "Avg Ride Duration (Min)", 
+       title = "Avg Ride Duration (Min) by Rider Type by Day of Week",
+       fill = "Rider Type")
+
+```
+
+* Average Ride Duration was higher for both types of riders on weekends as compared to weekdays.
+
+### 4.5 Analyze Total Rides and Ride Duration by Hour of Day
+
+```{r Analyze total rides and duration by hour of day, results='hide'}
+# Code chunk 4.5.1 Analyze total rides and duration by hour of day
+
+ride_hour_summary <- merged_data_3 %>%
+  group_by(member_casual, start_hour) %>%
+  summarize(total_rides = n(),
+            avg_ride_duration = mean(ride_duration), .groups = 'drop') %>%
+  ungroup()
+
+ride_hour_summary
+```
+
+
+```{r Chart Number of rides by hour by Rider Type}
+# Code chunk 4.5.2 Chart Number of rides by hour by Rider Type
+
+merged_data_3 %>%
+  ggplot(aes(start_hour, fill= member_casual)) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(x="Hour of the Day", 
+       y = "Number of Rides", 
+       title="Number of Rides by Hour",
+       fill = "Rider Type") +
+  geom_bar()
+
+```
+
+* Members start rides earlier in the day than Casual riders.
+
+Chart the Number of Rides by Hour for different Days of the Week
+
+```{r fig.align="center", echo = FALSE, fig.width = 15}
+# Code chunk 4.5.3 Chart Number of Rides by Hour for each Day of the Week
+
+merged_data_3 %>%
+  ggplot(aes(start_hour, fill=member_casual)) +
+  geom_bar() +
+  scale_y_continuous(labels = scales::comma) +
+  labs(x="Hour of the day", 
+       y = "Number of Rides", 
+       title="Number of Rides by Hour for different Days of the Week",
+       fill = "Rider Type") +
+  facet_wrap(~ start_dow)
+
+```
+
+* From the chart above, there are spikes **Mon - Fri during hours 6-9am  and 4-7pm** of for members. The same spikes don't appear for casual riders. Members also start riding earlier on the weekends compared to casual riders.
+
+### 4.6 Analyze by Bike Type and Rider Type 
+
+```{r}
+# Code chunk 4.6.1 Analyze by Bike Type and Rider Type
+
+ride_type_summary <- merged_data_3 %>%
+  group_by(rideable_type, member_casual) %>%
+  summarize(total_rides = n(), 
+            percentage_rides = (n() / nrow(merged_data_3)) * 100,
+            avg_ride_duration = mean(ride_duration), .groups = 'drop') %>% 
+  ungroup
+
+ride_type_summary
+```
+
+```{r}
+# Code chunk 4.6.2 Bar chart of number of rides by ride type by Rider type
+
+ggplot(merged_data_2, aes(x=rideable_type, fill=member_casual)) +
+  geom_bar() +
+  scale_y_continuous(labels = scales::comma) +
+  labs(x = "Bike Type", 
+       y = "Number of Rides", 
+       title = "Number of Rides by Bike Type by Rider Type",
+       fill = "Rider Type")
+
+```
+
+* Members used Classic and Electric Bikes more than Casual riders
+* Docked Bikes were used only by Casual riders
+* **Note:** when researching the different bike types on the Divvy website, they don't differentiate between Classic bikes and Docked bikes
+
+### 4.7 Analyze by Bike Type, Rider Type by Month
+
+```{r Analyze by Ride Type and Rider Type by Month, results='hide'}
+# Code chunk 4.7.1 Analyze by Ride Type and Rider Type by Month
+
+ride_type_month_summary <- merged_data_3 %>%
+  group_by(rideable_type, member_casual, start_month) %>%
+  summarize(total_rides = n(),
+            avg_ride_duration = mean(ride_duration), .groups = 'drop') %>%
+  ungroup()
+
+ride_type_month_summary
+
+# Create a member version
+
+member_ride_type_month_summary <- ride_type_month_summary %>%
+  filter(member_casual == "member")
+
+# Create a casual version
+
+casual_ride_type_month_summary <- ride_type_month_summary %>%
+  filter(member_casual == "casual")
+
+```
+
+* All three bike types were used the most between May-October and least between December-February.
+* Average Ride Duration for Docked Bikes was much higher than that of Classic and Electric Bikes.
+
+```{r Bar chart of number of Member Rides per Month by Bike Type}
+# Code chunk 4.7.2 Bar chart of number of Member Rides per Month by Bike Type
+
+ggplot(member_ride_type_month_summary, aes(x = start_month, y = total_rides, fill = rideable_type)) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(labels = scales::comma) +
+  labs(x = "Month", 
+       y = "Number of Rides", 
+       title = "Number of Member Rides per Month by Bike Type", 
+       fill = "Bike Type") 
+
+
+```
+
+* Electric bikes are gaining interest.
+
+```{r Bar chart of number of Casual Rides per Month by Bike Type}
+# Code chunk 4.7.3 Bar chart of number of rides by ride type by Rider type
+
+ggplot(casual_ride_type_month_summary, aes(x = start_month, y = total_rides, fill = rideable_type)) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(labels = scales::comma) +
+  labs(x = "Month", 
+       y = "Number of Rides", 
+       title = "Number of Casual Rides per Month by Bike Type", 
+       fill = "Bike Type") 
+
+
+```
+
+* Electric bikes are the preferred bike choice for Casual riders.
+
+```{r Bar chart of Casual Avg Ride Duration per Month by Bike type}
+
+# Code chunk 4.7.4 Bar chart of Casual Avg Ride Duration per Month by Bike type
+
+ggplot(casual_ride_type_month_summary, aes(x = start_month, y = avg_ride_duration, fill = rideable_type)) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(labels = scales::comma) +
+  labs(x = "Month", 
+       y = "Avg Ride Duration (Minutes)", 
+       title = "Casual Avg Ride Duration per Month by Bike Type", 
+       fill = "Bike Type") 
+
+```
+
+* Casual riders ride the Docked bike the longest, but this could be misleading since I think docked bikes should be treated like classic bikes.
+
+```{r Bar chart of Member Avg Ride Duration per Month by Bike type}
+# Code chunk 4.7.5 Bar chart of Member Avg Ride Duration per Month by Bike type
+
+ggplot(member_ride_type_month_summary, aes(x = start_month, y = avg_ride_duration, fill = rideable_type)) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(labels = scales::comma) +
+  labs(x = "Month", 
+       y = "Avg Ride Duration (Minutes)", 
+       title = "Member Avg Ride Duration per Month by Bike type", 
+       fill = "Bike Type") 
+
+```
+
+* Members riders ride the Classic bikes longer, but not by much.
+
+### 4.8 Analyze Start Stations
+
+```{r Analyze by Start Stations, results='hide'}
+# Code chunk 4.8.1 Analyze by Start Stations
+
+merged_data_3$start_station_name[merged_data_3$start_station_name == ""] <- NA
+ride_start_stations <- merged_data_3 %>% drop_na(start_station_name) %>% 
+  group_by(start_station_name, member_casual) %>%
+  summarize(total_rides = n()) %>% 
+  arrange(desc(total_rides))
+
+ride_start_stations
+```
+
+
+```{r Bar chart for most number of rides from top 5 start stations}
+# Code chunk 4.8.2: Create data frame for each Rider Type
+
+casual_start_stations <- ride_start_stations %>% filter(member_casual == "casual")
+member_start_stations <- ride_start_stations %>% filter(member_casual == "member")
+```
+
+```{r fig.align="center", echo = FALSE, fig.width = 12}
+# Code chunk 4.8.3 Bar chart for most number of rides from top 5 casual rider start stations
+
+head(casual_start_stations, 5) %>% arrange(desc(total_rides)) %>%
+  ggplot(ride_start_stations, mapping= aes(x= start_station_name, y = total_rides, fill = start_station_name)) + 
+  geom_col() +
+  scale_y_continuous(labels = scales::comma) +
+  labs(x="Start Station Name", 
+       y = "Number of Rides", 
+       title="Top 5 Casual Rider Start Stations",
+       fill = "Start Station Name") + 
+  coord_flip()
+
+```
+
+```{r fig.align="center", echo = FALSE, fig.width = 12}
+# Code chunk 4.8.4 Bar chart for most number of rides from top 5 member start stations
+
+head(member_start_stations, 5) %>% arrange(desc(total_rides)) %>%
+  ggplot(ride_start_stations, mapping= aes(x= start_station_name, y = total_rides, fill = start_station_name)) + 
+  geom_col() +
+  scale_y_continuous(labels = scales::comma) +
+  labs(x="Start Station Name", 
+       y = "Number of Rides", 
+       title="Top 5 Member Rider Start Stations",
+       fill = "Start Station Name") + 
+  coord_flip()
+
+```
+
+* Streeter Dr & Grand Ave station is the most popular start station for casual riders, with 44,526 rides.
+* Kingsbury St & Kinzie St is the most popular start station for members, with 24,377 rides.
+* Budlong Woods Library is the least popular end station for casual riders, with 440 rides.
+* California Ave & 23rd Pl is the least popular end station for members with 445 rides.
+* Members and casual riders do not share top 5 start stations
+
+### 4.9 Analyze End Stations 
+
+```{r Analyze by End Stations, results='hide', warning=FALSE, message=FALSE}
+# Code chunk 4.9.1: Analyze by End Stations
+
+merged_data_3$end_station_name[merged_data_3$end_station_name == ""] <- NA
+ride_end_stations <- merged_data_3 %>% drop_na(end_station_name) %>% 
+  group_by(end_station_name, member_casual) %>%
+  summarize(total_rides = n()) %>% 
+  arrange(desc(total_rides))
+ride_end_stations
+```
+
+* Streeter Dr & Grand Ave station is the most popular end station for casual riders, with 45,329 rides.
+* Kingsbury St & Kinzie St is the most popular end station for members, with 24,412 rides.
+* Keystone Ave & Montrose Ave is the least popular end station for casual riders, with 417 rides.
+* Damen Ave & Coulter St is the least popular end station for members with 419 rides.
+* They do not share top 5 end stations.
+
+```{r}
+# Code chunk 4.9.2: Create data frame for each Rider Type
+
+casual_end_stations <- ride_end_stations %>% filter(member_casual == "casual")
+member_end_stations <- ride_end_stations %>% filter(member_casual == "member")
+```
+
+```{r fig.align="center", echo = FALSE, fig.width = 12}
+
+# Code chunk 4.9.3: Bar chart for most number of rides from top 5 Casual Rider start stations
+
+head(casual_end_stations, 5) %>% arrange(desc(total_rides)) %>%
+  ggplot(ride_end_stations, mapping= aes(x= end_station_name, y = total_rides, fill = end_station_name)) + 
+  geom_col() +
+  scale_y_continuous(labels = scales::comma) +
+  labs(x="End Station Name", 
+       y = "Number of Rides", 
+       title="Top 5 Casual Rider End Stations",
+       fill = "End Station Name") + 
+  coord_flip()
+
+```
+
+* The Top 5 casual rider start and end stations are the same, with Streeter Dr & Grand Ave station being the most popular.
+
+```{r fig.align="center", echo = FALSE, fig.width = 12}
+# Code chunk 4.9.4: Bar chart for most number of rides from top 5 Member start stations
+
+head(member_end_stations, 5) %>% arrange(desc(total_rides)) %>%
+  ggplot(ride_end_stations, mapping= aes(x= end_station_name, y = total_rides, fill = end_station_name)) + 
+  geom_col() +
+  scale_y_continuous(labels = scales::comma) +
+  labs(x="End Station Name", 
+       y = "Number of Rides", 
+       title="Top 5 Member End Stations",
+       fill = "End Station Name") + 
+  coord_flip()
+
+```
+
+* The Top 5 member start and end stations are the same, with Kingsbury St & Kinzie St station being the most popular.
+
+### 4.10 Analyze Rides Between Start Station to End Station
+
+```{r}
+# Code chunk 4.10.1 Analyze rides between Start Station to End Station
+
+station_pairs <- merged_data_2 %>% drop_na(start_station_name, end_station_name) %>% 
+  group_by(start_station_name, end_station_name, member_casual) %>%
+  summarize(total_rides = n(),
+            avg_ride_duration = mean(ride_duration), .groups = 'drop') %>%
+  ungroup() %>%
+  filter(total_rides >= 50) %>%
+  arrange(desc(total_rides))
+station_pairs
+```
+
+* Most rides took place between Streeter Dr & Grand Ave	and returning to Streeter Dr & Grand Ave.
+* Least rides took place between Michigan Ave & Oak St and Montrose Harbor station.
+
+### 4.11 Create and Plot Maps Using the Coordinates Data
+
+```{r Create new data frame > 200 rides, results='hide'}
+# Code chunk 4.11.1: Create new data frame for the most popular start_lat and start_long > 200 rides
+
+coordinates_df <- merged_data_2 %>% 
+  group_by(start_lng, start_lat, member_casual, rideable_type) %>%
+  summarise(total_rides = n(), .groups="drop") %>%
+  filter(total_rides > 200)
+
+coordinates_df
+
+```
+
+```{r Create data frame for each Rider Type, results='hide', message=FALSE, warning=FALSE}
+# Code chunk 4.11.2: Create data frame for each Rider type
+
+casual_riders <- coordinates_df %>% filter(member_casual == "casual")
+member_riders <- coordinates_df %>% filter(member_casual == "member")
+
+casual_riders
+member_riders
+```
+
+
+```{r Set up ggmap and map of Chicago, warning=FALSE}
+# Code chunk 4.11.3: Set up ggmap and map of Chicago
+
+chicago <- c(left = -87.700424, bottom = 41.790769, right = -87.554855, top = 41.990119)
+chicago_map <- get_stamenmap(bbox = chicago, zoom = 12, maptype = "terrain")
+
+```
+
+```{r Map of Casual rider start locations, Warning=FALSE, message=FALSE}
+
+# Code chunk 4.11.4: Map of Casual Riders
+
+ggmap(chicago_map,darken = c(0.1, "white")) +
+  geom_point(casual_riders, mapping = aes(x = start_lng, y = start_lat, color=rideable_type), size = 1) +
+  coord_fixed(0.8) +
+  labs(title = "Most Common Starting Locations by Casual riders",
+       x=NULL,
+       y=NULL) +
+  scale_color_discrete(name = "Bike Type")
+
+```
+
+* Docked bike rides are mostly located near the coast, probably because that is where the stations are. Classic and Electric rides are spread out throughout the city.
+
+```{r Map of Member start locations, Warning='FALSE'}
+# Code chunk 4.11.5: Map of Members
+
+ggmap(chicago_map,darken = c(0.1, "white")) +
+  geom_point(member_riders, mapping = aes(x = start_lng, y = start_lat, color=rideable_type), size = 1) +
+  coord_fixed(0.8) +
+  labs(title = "Most Common Starting Locations by Member riders",
+       x=NULL,
+       y=NULL) +
+  scale_color_discrete(name = "Bike Type")
+
+```
+
+* Members use of Classic and Electric bikes are spread out throughout the city.
+
+## 5. Share
+
+### 5.1 Omitted Variables
+
+  **1. Cyclistic does not provide cost information** - We can't calculate the amount charged for each ride, which would be useful in determining the break-even point for casual riders switching over to becoming a member.
+  **2. Cyclistic does not provide rider identification** - We can't determine the unique number of casual or member riders in the system. We can't determine the number of rides and ride duration of individual riders (both members and casual).
+  **3. Cyclistic does not provide riders' addresses** - We can't target local (Chicago) casual riders.
+  **4. Cyclistic does not provide ride purpose (e.g., commute)** - We can't separate commute from pleasure rides. Not clear how Cyclistic determined 30% rides are for commuting.
+  **5. Cyclistic does not provide distance traveled** - Cyclistic does provide the lat and long for start and end locations, so we can calculate point to point distance, but not total distance covered by each ride. 
+  **6. Cyclistic does not provide an identifier of the official Cyclistic stations** - We can't perform analysis on rides starting and ending at Cyclistic vs non-Cyclistic stations.
+
+### 5.2 Business Question Responses
+
+**1. How do annual members and casual riders use Cyclistic bikes differently?** 
+
+    - Members take more rides (60%) vs casual riders (40%).
+    - Casual riders ride on average longer (~15min) than members (~10min).
+    - Members take more than 2x the number of rides than casual riders during the months Nov  
+      to Mar.
+    - Casual riders ride more frequently on weekends and members ride more frequently during  
+      the week.
+    - Member and casual riders take approximately the same number of rides on the weekends,  
+      but casual riders ride for a longer amount of time.
+    - Member rides spike during commuter hours (6-9am and 4-7pm). However, they take more 
+      rides in the afternoon, which indicates that members are riding in the afternoon for
+      pleasure also.
+    - Casual riders start riding later in the morning compared to members. This is true on
+      weekends also,   
+      which leads me to think that some members commute on weekends.
+    - Members used both classic and electric bikes more than casual riders.
+    - Docked bikes were used only by casual riders. When researching the different bike 
+      types on the Divvy website, they don't differentiate between Classic and Docked bike
+      types, so I would need to ask the Marketing team to confirm if there is a difference. 
+    - Casual riders prefer electric bikes even if you combine docked and classic bikes.
+    - Docked average ride duration was much higher than classic and electric Bikes.
+    - Streeter Dr & Grand Ave station is the most popular start station for casual riders,
+      with 44,526 rides.
+    - Kingsbury St & Kinzie St is the most popular start station for members, with 24,377 
+      rides.
+    - Members and casual riders do not share top 5 start or end stations.
+
+**2. Why would casual riders buy Cyclistic annual memberships?**  
+
+    - Cost savings: Casual riders that ride bikes frequently may benefit from cost savings
+      when switching to an annual membership. Unfortunately, Cyclistic does not provide 
+      price/cost or rider information, which makes it difficult to target riders that would
+      benefit from potential cost savings.
+    - Time savings: Casual riders could save time in commuting and getting around town for 
+      fun.
+    - Special benefits: Casual riders could gain additional benefits (e.g., special bikes, 
+      Cyclistic user portal access, member parties) that are available only to members.
+
+## 6. Act
+
+**3. How can Cyclistic use digital media to influence casual riders to become members?**
+
+    - Create a membership promotion on the cost savings if they ride their bike a certain number
+      of times or for a certain amount of time.
+    - Create a membership promotion that highlights the number of stations throughout the city 
+      and the potential time savings on riding a bike to get around the city for both commuting and 
+      pleasure riding.
+    - Create a membership promotion with additional weekend discounts.
+    - Create an electric bike promotion, showcasing the member cost savings and benefits.
+    - Create a membership promotion receiving a reduced membership price if the casual rider shares their   
+      "Cyclistic experience" on their social media platforms.
