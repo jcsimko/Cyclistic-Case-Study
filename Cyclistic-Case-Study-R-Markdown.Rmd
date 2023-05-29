@@ -89,18 +89,18 @@ library(tinytex)
 ```{r load past 12 months of data, message=FALSE, warning=FALSE}
 #Code chunk 3.3.1: Load past 12 months of data
 
-MAY22 <- read.csv("C:/Users/jcsim/OneDrive/Documents/Learning/Posit/Cyclistic/Data/202205-divvy-tripdata.csv")
-JUN22 <- read.csv("C:/Users/jcsim/OneDrive/Documents/Learning/Posit/Cyclistic/Data/202206-divvy-tripdata.csv")
-JUL22 <- read.csv("C:/Users/jcsim/OneDrive/Documents/Learning/Posit/Cyclistic/Data/202207-divvy-tripdata.csv")
-AUG22 <- read.csv("C:/Users/jcsim/OneDrive/Documents/Learning/Posit/Cyclistic/Data/202208-divvy-tripdata.csv")
-SEP22 <- read.csv("C:/Users/jcsim/OneDrive/Documents/Learning/Posit/Cyclistic/Data/202209-divvy-publictripdata.csv")
-OCT22 <- read.csv("C:/Users/jcsim/OneDrive/Documents/Learning/Posit/Cyclistic/Data/202210-divvy-tripdata.csv")
-NOV22 <- read.csv("C:/Users/jcsim/OneDrive/Documents/Learning/Posit/Cyclistic/Data/202211-divvy-tripdata.csv")
-DEC22 <- read.csv("C:/Users/jcsim/OneDrive/Documents/Learning/Posit/Cyclistic/Data/202212-divvy-tripdata.csv")
-JAN23 <- read.csv("C:/Users/jcsim/OneDrive/Documents/Learning/Posit/Cyclistic/Data/202301-divvy-tripdata.csv")
-FEB23 <- read.csv("C:/Users/jcsim/OneDrive/Documents/Learning/Posit/Cyclistic/Data/202302-divvy-tripdata.csv")
-MAR23 <- read.csv("C:/Users/jcsim/OneDrive/Documents/Learning/Posit/Cyclistic/Data/202303-divvy-tripdata.csv")
-APR23 <- read.csv("C:/Users/jcsim/OneDrive/Documents/Learning/Posit/Cyclistic/Data/202304-divvy-tripdata.csv")
+MAY22 <- read.csv("C:/Users/jcsim/Posit/Cyclistic/Data/202205-divvy-tripdata.csv")
+JUN22 <- read.csv("C:/Users/jcsim/Posit/Cyclistic/Data/202206-divvy-tripdata.csv")
+JUL22 <- read.csv("C:/Users/jcsim/Posit/Cyclistic/Data/202207-divvy-tripdata.csv")
+AUG22 <- read.csv("C:/Users/jcsim/Posit/Cyclistic/Data/202208-divvy-tripdata.csv")
+SEP22 <- read.csv("C:/Users/jcsim/Posit/Cyclistic/Data/202209-divvy-publictripdata.csv")
+OCT22 <- read.csv("C:/Users/jcsim/Posit/Cyclistic/Data/202210-divvy-tripdata.csv")
+NOV22 <- read.csv("C:/Users/jcsim/Posit/Cyclistic/Data/202211-divvy-tripdata.csv")
+DEC22 <- read.csv("C:/Users/jcsim/Posit/Cyclistic/Data/202212-divvy-tripdata.csv")
+JAN23 <- read.csv("C:/Users/jcsim/Posit/Cyclistic/Data/202301-divvy-tripdata.csv")
+FEB23 <- read.csv("C:/Users/jcsim/Posit/Cyclistic/Data/202302-divvy-tripdata.csv")
+MAR23 <- read.csv("C:/Users/jcsim/Posit/Cyclistic/Data/202303-divvy-tripdata.csv")
+APR23 <- read.csv("C:/Users/jcsim/Posit/Cyclistic/Data/202304-divvy-tripdata.csv")
 
 ```
 
@@ -1302,12 +1302,13 @@ ggmap(chicago_map,darken = c(0.1, "white")) +
 
 ### 5.1 Omitted Variables
 
-  **1. Cyclistic does not provide cost information** - We can't calculate the amount charged for each ride, which would be useful in determining the break-even point for casual riders switching over to becoming a member.
-  **2. Cyclistic does not provide rider identification** - We can't determine the unique number of casual or member riders in the system. We can't determine the number of rides and ride duration of individual riders (both members and casual).
-  **3. Cyclistic does not provide riders' addresses** - We can't target local (Chicago) casual riders.
-  **4. Cyclistic does not provide ride purpose (e.g., commute)** - We can't separate commute from pleasure rides. Not clear how Cyclistic determined 30% rides are for commuting.
-  **5. Cyclistic does not provide distance traveled** - Cyclistic does provide the lat and long for start and end locations, so we can calculate point to point distance, but not total distance covered by each ride. 
-  **6. Cyclistic does not provide an identifier of the official Cyclistic stations** - We can't perform analysis on rides starting and ending at Cyclistic vs non-Cyclistic stations.
+  **1. Cyclistic does not provide cost information** - We can't calculate the amount charged for each ride, which would be useful in determining the break-even point for casual riders switching over to becoming a member.  
+  **2. Cyclistic does not provide rider identification** - We can't determine the unique number of casual or member riders in the system. We can't determine the number of rides and ride duration of individual riders (both members and casual).  
+  **3. Cyclistic does not provide riders' addresses** - We can't target local (Chicago) casual riders.  
+  **4. Cyclistic does not provide ride purpose (e.g., commute)** - We can't separate commute from pleasure rides. Not clear how Cyclistic determined 30% rides are for commuting.  
+  **5. Cyclistic does not provide distance traveled** - Cyclistic does provide the lat and long for start and end locations, so we can calculate point to point distance, but not total distance covered by each ride.  
+  **6. Cyclistic does not provide an identifier of the official Cyclistic stations** - We can't perform analysis on rides starting and ending at Cyclistic vs non-Cyclistic stations.  
+
 
 ### 5.2 Business Question Responses
 
